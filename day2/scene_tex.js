@@ -7,7 +7,7 @@ var program0, program1, program2; // 0: color, 1:phong, 2: texture mapping
 var modelMatrixLoc0, viewMatrixLoc0, modelMatrixLoc1, viewMatrixLoc1, modelMatrixLoc2, viewMatrixLoc2;
 
 var trballMatrix = mat4(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
-var vertCubeStart, numVertCubeTri, vertPyraStart, numVertPyraTri, vertGroundStart, numVertGroundTri;
+var vertCubeStart, numVertCubeTri, vertPyraStart, numVertPyraTri, vertGroundStart, numVertGroundTri, vertCurtainStart, numVertCurtainTri;
 
 var eyePos = vec3(0.0, 10.0, 10.0);
 var atPos = vec3(0.0, 0.0, 0.0);
@@ -42,8 +42,8 @@ window.onload = function init()
 
     generateTexGround(20, 10);
     generateTexCube();
-    generateHexaPyramid();
-
+    //generateHexaPyramid();
+    generateTexCurtain();
     // virtual trackball
     var trball = trackball(canvas.width, canvas.height);
     var mouseDown = false;
@@ -308,7 +308,17 @@ function setTexture() {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
     
-    
+    var image2 = new Image();
+    image2.src = "../images/curtain.bmp";
+
+    var texture2 = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, texture2);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image2);
+
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 }
 
 function render() {
@@ -343,18 +353,26 @@ function render() {
     gl.uniformMatrix4fv(modelMatrixLoc2, false, flatten(trballMatrix));
     gl.drawArrays(gl.TRIANGLES, vertGroundStart, numVertGroundTri);
     
-
-        // draw a cube
-        gl.useProgram(program2);
-        gl.uniform1i(textureLoc, 1);
+    // draw a cube
+    gl.useProgram(program2);
+    gl.uniform1i(textureLoc, 1);
         
-        var rMatrix = mult(rotateY(theta), rotateZ(0));
-        modelMatrix = mult(translate(0, 0.5, 0), rMatrix);
-        modelMatrix = mult(trballMatrix, modelMatrix);
-        gl.uniformMatrix4fv(modelMatrixLoc2, false, flatten(modelMatrix));
-        gl.drawArrays(gl.TRIANGLES, vertCubeStart, numVertCubeTri);
+    var rMatrix = mult(rotateY(theta), rotateZ(0));
+    modelMatrix = mult(translate(0, 0.5, 0), rMatrix);
+    modelMatrix = mult(trballMatrix, modelMatrix);
+    gl.uniformMatrix4fv(modelMatrixLoc2, false, flatten(modelMatrix));
+    gl.drawArrays(gl.TRIANGLES, vertCubeStart, numVertCubeTri);
 
 
+    //draw the curtain
+    gl.useProgram(program2);
+    gl.uniform1i(textureLoc, 2);
+    // gl.uniform4f(uColorLoc, 0.8, 0.8, 0.8, 1.0);    // gray
+    // gl.uniform4f(diffuseProductLoc, 0.8, 0.8, 0.8, 1.0);
+
+    gl.uniformMatrix4fv(modelMatrixLoc2, false, flatten(trballMatrix));
+    gl.drawArrays(gl.TRIANGLES, vertCurtainStart, numVertCurtainTri);
+    
     window.requestAnimationFrame(render);
 }
 
@@ -469,124 +487,105 @@ function generateTexGround(width, height) {
             numVertGroundTri++;
         }
     }
-    
+
+}
+function generateTexCurtain(){
+    vertCurtainStart = points.length;
+    numVertCurtainTri = 0;
+            //앞커튼
             // two triangles
             points.push(vec4(-20, -1, -10, 1.0)); //왼쪽 아래
             normals.push(vec4(0.0, 1.0, 0.0, 0.0));
             texCoords.push(vec2(0, 0));
-            numVertGroundTri++;
+            numVertCurtainTri++;
             
             points.push(vec4(-20, 29, -30, 1.0));//왼쪽 위
             normals.push(vec4(0.0, 1.0, 0.0, 0.0));
             texCoords.push(vec2(0, 1));
-            numVertGroundTri++;
+            numVertCurtainTri++;
 
             points.push(vec4(20, 29, -30, 1.0)); //오른쪽 위
             normals.push(vec4(0.0, 1.0, 0.0, 0.0));
             texCoords.push(vec2(1, 1));
-            numVertGroundTri++;
+            numVertCurtainTri++;
 
             points.push(vec4(-20, -1, -10, 1.0)); //왼쪽 아래
             normals.push(vec4(0.0, 1.0, 0.0, 0.0));
             texCoords.push(vec2(0, 0));
-            numVertGroundTri++;
+            numVertCurtainTri++;
 
             points.push(vec4(20, 29, -30, 1.0)); //오른쪽 위
             normals.push(vec4(0.0, 1.0, 0.0, 0.0));
             texCoords.push(vec2(1, 1));
-            numVertGroundTri++;
+            numVertCurtainTri++;
 
             points.push(vec4(20, -1, -10, 1.0)); //오른쪽 아래
             normals.push(vec4(0.0, 1.0, 0.0, 0.0));
             texCoords.push(vec2(1, 0));
-            numVertGroundTri++;
-    
-    /*
-    numVertGroundLine = 0;
-    // grid lines
-    for(var x=-scale; x<=scale; x++) {
-        points.push(vec4(x, -1.0, -scale, 1.0));
-        normals.push(vec4(0.0, 0.0, 0.0, 0.0));
-        numVertGroundLine++;
-        points.push(vec4(x, -1.0, scale, 1.0));
-        normals.push(vec4(0.0, 0.0, 0.0, 0.0));
-        numVertGroundLine++;
-    }
-    for(var z=-scale; z<=scale; z++) {
-        points.push(vec4(-scale, -1.0, z, 1.0));
-        normals.push(vec4(0.0, 0.0, 0.0, 0.0));
-        numVertGroundLine++;
-        points.push(vec4(scale, -1.0, z, 1.0));
-        normals.push(vec4(0.0, 0.0, 0.0, 0.0));
-        numVertGroundLine++;
-    }
-*/
-}
+            numVertCurtainTri++;
 
-function generateHexaPyramid() {
-    vertPyraStart = points.length;
-    numVertPyraTri = 0;
-    const vertexPos = [
-        vec4(0.0, 0.5, 0.0, 1.0),
-        vec4(1.0, 0.5, 0.0, 1.0),
-        vec4(0.5, 0.5, -0.866, 1.0),
-        vec4(-0.5, 0.5, -0.866, 1.0),
-        vec4(-1.0, 0.5, 0.0, 1.0),
-        vec4(-0.5, 0.5, 0.866, 1.0),
-        vec4(0.5, 0.5, 0.866, 1.0),
-        vec4(0.0, -1.0, 0.0, 1.0)
-    ];
+            //왼쪽커튼
+            // two triangles
+            points.push(vec4(-20, -1, 10, 1.0)); //왼쪽 아래
+            normals.push(vec4(0.0, 1.0, 0.0, 0.0));
+            texCoords.push(vec2(0, 0));
+            numVertCurtainTri++;
+            
+            points.push(vec4(-20, 29, -5, 1.0));//왼쪽 위
+            normals.push(vec4(0.0, 1.0, 0.0, 0.0));
+            texCoords.push(vec2(0, 1));
+            numVertCurtainTri++;
 
-    const vertexNormal = [
-        vec4(0.0, 1.0, 0.0, 0.0),
-        vec4(1.0, 0.0, 0.0, 0.0),
-        vec4(0.5, 0.0, -0.866, 0.0),
-        vec4(-0.5, 0.0, -0.866, 0.0),
-        vec4(-1.0, 0.0, 0.0, 0.0),
-        vec4(-0.5, 0.0, 0.866, 0.0),
-        vec4(0.5, 0.0, 0.866, 0.0),
-        vec4(0.0, -1.0, 0.0, 0.0)
-    ];
+            points.push(vec4(-20, 29, -30, 1.0)); //오른쪽 위
+            normals.push(vec4(0.0, 1.0, 0.0, 0.0));
+            texCoords.push(vec2(1, 1));
+            numVertCurtainTri++;
 
-    numVertPyraTri = 0;
-    for (var i=1; i<6; i++) {
-        points.push(vertexPos[0]);
-        normals.push(vertexNormal[0]);
-        numVertPyraTri++;
-        points.push(vertexPos[i]);
-        normals.push(vertexNormal[0]);
-        numVertPyraTri++;
-        points.push(vertexPos[i+1]);
-        normals.push(vertexNormal[0]);
-        numVertPyraTri++;
+            points.push(vec4(-20, -1, 10, 1.0)); //왼쪽 아래
+            normals.push(vec4(0.0, 1.0, 0.0, 0.0));
+            texCoords.push(vec2(0, 0));
+            numVertCurtainTri++;
 
-        points.push(vertexPos[7]);
-        normals.push(vertexNormal[7]);
-        numVertPyraTri++;
-        points.push(vertexPos[i+1]);
-        normals.push(vertexNormal[i+1]);
-        numVertPyraTri++;
-        points.push(vertexPos[i]);
-        normals.push(vertexNormal[i]);
-        numVertPyraTri++;
-    }
-    points.push(vertexPos[0]);
-    normals.push(vertexNormal[0]);
-    numVertPyraTri++;
-    points.push(vertexPos[6]);
-    normals.push(vertexNormal[0]);
-    numVertPyraTri++;
-    points.push(vertexPos[1]);
-    normals.push(vertexNormal[0]);
-    numVertPyraTri++;
+            points.push(vec4(-20, 29, -30, 1.0)); //오른쪽 위
+            normals.push(vec4(0.0, 1.0, 0.0, 0.0));
+            texCoords.push(vec2(1, 1));
+            numVertCurtainTri++;
 
-    points.push(vertexPos[7]);
-    normals.push(vertexNormal[7]);
-    numVertPyraTri++;
-    points.push(vertexPos[1]);
-    normals.push(vertexNormal[1]);
-    numVertPyraTri++;
-    points.push(vertexPos[6]);
-    normals.push(vertexNormal[6]);
-    numVertPyraTri++;
-}
+            points.push(vec4(-20, -11, -10, 1.0)); //오른쪽 아래
+            normals.push(vec4(0.0, 1.0, 0.0, 0.0));
+            texCoords.push(vec2(1, 0));
+            numVertCurtainTri++;
+            
+            //오른쪽커튼
+            // two triangles
+            points.push(vec4(20, -1, 10, 1.0)); //왼쪽 아래
+            normals.push(vec4(0.0, 1.0, 0.0, 0.0));
+            texCoords.push(vec2(0, 0));
+            numVertCurtainTri++;
+            
+            points.push(vec4(20, 29, -5, 1.0));//왼쪽 위
+            normals.push(vec4(0.0, 1.0, 0.0, 0.0));
+            texCoords.push(vec2(0, 1));
+            numVertCurtainTri++;
+
+            points.push(vec4(20, 29, -30, 1.0)); //오른쪽 위
+            normals.push(vec4(0.0, 1.0, 0.0, 0.0));
+            texCoords.push(vec2(1, 1));
+            numVertCurtainTri++;
+
+            points.push(vec4(20, -1, 10, 1.0)); //왼쪽 아래
+            normals.push(vec4(0.0, 1.0, 0.0, 0.0));
+            texCoords.push(vec2(0, 0));
+            numVertCurtainTri++;
+
+            points.push(vec4(20, 29, -30, 1.0)); //오른쪽 위
+            normals.push(vec4(0.0, 1.0, 0.0, 0.0));
+            texCoords.push(vec2(1, 1));
+            numVertCurtainTri++;
+
+            points.push(vec4(20, -11, -10, 1.0)); //오른쪽 아래
+            normals.push(vec4(0.0, 1.0, 0.0, 0.0));
+            texCoords.push(vec2(1, 0));
+            numVertCurtainTri++;
+            
+}    
