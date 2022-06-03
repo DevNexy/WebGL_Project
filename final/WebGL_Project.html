@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>죽음의 무대</title>
+        
+        <script id="colorVS" type="x-shader/x-vertex">
+            attribute vec4 vPosition;
+
+            uniform mat4 modelMatrix, viewMatrix, projectionMatrix;
+            
+            void main() {
+                gl_Position = projectionMatrix * viewMatrix * modelMatrix * vPosition;
+            }
+        </script>
+
+        <script id="colorFS" type="x-shader/x-fragment">
+            precision mediump float;
+            
+            uniform vec4 uColor;
+            
+            void main() {
+                gl_FragColor = uColor;
+            }
+        </script>
+
+        <script id="phongVS" type="x-shader/x-vertex">
+        attribute vec4 vPosition;
+        attribute vec4 vNormal;
+
+        uniform mat4 modelMatrix, viewMatrix, projectionMatrix;
+        
+        varying vec3 fNormal, fWorldPos;
+
+        void main() {
+            gl_Position = projectionMatrix * viewMatrix * modelMatrix * vPosition;
+            
+            fNormal = normalize(mat3(modelMatrix) * vNormal.xyz);
+            fWorldPos = (modelMatrix * vPosition).xyz;
+        }
+        </script>
+
+        <script id="phongFS" type="x-shader/x-fragment">
+            precision mediump float;
+            varying vec3 fNormal, fWorldPos;
+    
+            uniform vec3 eyePos, kAtten, spotDir;
+            uniform vec4 lightSrc, ambientProduct, diffuseProduct, specularProduct;
+            uniform float shininess, spotExp;
+            
+            void main() {
+                vec3 V = normalize(eyePos - fWorldPos);
+                vec3 N = normalize(fNormal);
+    
+                vec3 lightVec = lightSrc.xyz - fWorldPos;
+                vec3 L = normalize(lightVec);
+                float kd = max(dot(L, N), 0.0);
+                vec4 diffuse = kd * diffuseProduct;
+    
+                vec3 H = normalize(L + V);
+                float ks = pow(max(dot(N, H), 0.0), shininess);
+                vec4 specular = ks * specularProduct;
+                
+                float d = length(lightVec);
+                float atten = 1.0 / (kAtten[0] + kAtten[1]*d + kAtten[2]*d*d);
+    
+                float spotDot = max(dot(normalize(spotDir), -L), 0.0);
+                if(spotDot > 0.0)
+                    atten *= pow(spotDot, spotExp);
+                else
+                    atten = 0.0;
+    
+                float fogDepth = length(eyePos - fWorldPos);
+                float fogFactor = smoothstep(2.0, 10.0, fogDepth);
+    
+                vec4 color = ambientProduct + atten * (diffuse + specular);
+    
+                //gl_FragColor = ambientProduct + diffuse + specular;
+                gl_FragColor = mix(color, vec4(0.0,0.0,0.0,1.0), fogFactor);
+                gl_FragColor.a = 1.0;
+            }
+        </script>
+
+        <script id="texMapVS" type = "x-shader/x-vertex">
+            attribute vec4 vPosition;
+            attribute vec4 vNormal;
+            attribute vec2 vTexCoord;
+
+            uniform mat4 modelMatrix, viewMatrix, projectionMatrix;
+
+            varying vec2 fTexCoord;
+            varying vec3 fNormal, fWorldPos;
+
+            void main(){
+                gl_Position = projectionMatrix * viewMatrix * modelMatrix * vPosition;
+
+                fNormal = normalize(mat3(modelMatrix) * vNormal.xyz);
+                fWorldPos = (modelMatrix * vPosition).xyz;
+                fTexCoord = vTexCoord;
+            }
+        </script>
+        <script id="texMapFS" type = "x-shader/x-fragment">
+            precision mediump float;
+
+            uniform sampler2D texture;
+            varying vec2 fTexCoord;
+            varying vec3 fNormal, fWorldPos;
+
+            uniform vec3 eyePos;
+            uniform vec4 lightSrc, ambientProduct, diffuseProduct, specularProduct;
+            uniform float shininess;
+
+            void main(){
+                vec3 N = normalize(fNormal);
+                vec3 L = normalize(lightSrc.xyz);
+                float kd = max(dot(L, N), 0.0);
+                vec4 diffuse = kd * diffuseProduct;
+
+                vec3 V = normalize(eyePos - fWorldPos);
+                vec3 H = normalize(L + V);
+                float ks = pow(max(dot(N, H), 0.0), shininess);
+                vec4 specular = ks * specularProduct;
+
+                float fogDepth = length(eyePos-fWorldPos);
+                float fogFactor = smoothstep(2.0,50.0,fogDepth);
+
+                vec4 color = (ambientProduct+diffuse+specular)*texture2D(texture,fTexCoord);
+                gl_FragColor = mix(color, vec4(0.5,0.5,0.5,0.1), fogFactor);
+
+                //gl_FragColor = (ambientProduct + diffuse + specular) * texture2D(texture, fTexCoord);
+                gl_FragColor.a = 1.0;
+            }
+        </script>
+        <script type="text/javascript" src="../Common/webgl-utils.js"></script>
+        <script type="text/javascript" src="../Common/initShaders.js"></script>
+        <script type="text/javascript" src="../Common/MV.js"></script>
+        <script type="text/javascript" src="../trackball.js"></script>
+        <!-- <script type="text/javascript" src="scene_tex.js"></script> -->
+    </head>
+    <body>
+        <div style="width:800px; text-align:center;">
+            <div>
+                <span id="colText">충돌 횟수 : </span>
+                <span id="colNum">0</span>
+                <span id="colText">루비 : </span>
+                <span id="sapphireNum">0</span><br>
+                <span id="timer">60</span>
+                <span id="sec">초</span>
+                <script type="text/javascript" src="WebGL_Project.js"></script>
+            </div>
+        </div>
+        <canvas id="gl-canvas" width="800" height="512">
+            Oops... your browser doesn't support the HTML5 canvas element!
+            <img src="../images/fire.jpg" hidden>
+        </canvas>
+        <div style="width:800px; text-align:center;">
+            <button id="up">▲</button><br>
+            <button id="left">◀</button>
+            <button id="down">▼</button>
+            <button id="right">▶</button><br>
+            <button id="space">space</button>
+        </div>
+        <div>
+            <img src="../images/floor.bmp" hidden>
+            <img src="../images/crate.bmp" hidden>
+            <img src="../images/curtain.bmp" hidden>
+            <img src="../images/fire.bmp" hidden>
+            <img src="../images/yellow.bmp" hidden>
+        </div>
+        <style>
+            #space{
+                width:100px;
+            }
+            div:first-child{
+                border-style: solid;
+            }
+            canvas{
+                border-style: solid;
+            }
+            button{
+                background-color: bisque;
+            }
+        </style>
+    </body>
+</html>
