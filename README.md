@@ -1,5 +1,5 @@
 ## WebGL_Project
-## 2022-1 컴퓨터그래픽스 프로젝트   
+## 2022-1 Computer Graphics Project
 <img src="https://user-images.githubusercontent.com/92451281/171985349-8732d85e-806d-44f0-a963-523ee7579c38.png" width ="50%" height="50%">
 
 프로젝트명 : 죽음의 무대   
