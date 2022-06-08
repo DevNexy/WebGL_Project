@@ -53,6 +53,17 @@
 * Space : 점프
 ---
 ## <스크린 샷>
+* 장애물&보석 랜덤(위치, 빠르기, 갯수)
+* 충돌 횟수 체크
+* 보석 획득 횟수 체크
+<img src="https://user-images.githubusercontent.com/92451281/172599871-84aae69e-0738-4b1e-a66c-c02bdf290958.png" width ="50%" height="50%">
+
+* 점프할 때
+<img src="https://user-images.githubusercontent.com/92451281/172599894-e2a9d8fd-0df5-4835-864a-663cbf7253d7.png" width ="50%" height="50%">
+
+* 플레이어가 장애물에 충돌했을 때
+<img src="https://user-images.githubusercontent.com/92451281/172599917-51b66b7a-d812-4230-871a-310bcc4fb188.png" width ="75%" height="75%">
+
 
 ---
 ## <시연 동영상>
